@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Message, Composer } from './components.jsx';
 import { welcome, replyTo } from './replies.js';
+import posthog from './posthog.js';
 
 export default function App() {
   const [messages, setMessages] = useState([welcome]);
@@ -19,6 +20,22 @@ export default function App() {
     ]);
   }
 
+  function toggleTheme() {
+    const selectedTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(selectedTheme);
+    posthog?.capture('theme_changed', { selected_theme: selectedTheme });
+    posthog?.logger.info('theme preference changed', {
+      event: 'theme_changed',
+      selected_theme: selectedTheme,
+    });
+  }
+
+  function resetConversation() {
+    setMessages([welcome]);
+    posthog?.capture('conversation_reset');
+    posthog?.logger.info('conversation reset', { event: 'conversation_reset' });
+  }
+
   return <main className="app" data-theme={theme}>
     <section className="chat" aria-labelledby="chat-title">
       <header className="chat-header">
@@ -28,7 +45,7 @@ export default function App() {
             variant="secondary"
             aria-label={`Skift til ${theme === 'light' ? 'mørkt' : 'lyst'} tema`}
             title={`Skift til ${theme === 'light' ? 'mørkt' : 'lyst'} tema`}
-            onClick={() => setTheme(current => current === 'light' ? 'dark' : 'light')}
+            onClick={toggleTheme}
           >
             <span className="theme-button-content">
               <svg className="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
@@ -40,7 +57,7 @@ export default function App() {
               {theme === 'light' ? 'Lyst' : 'Mørkt'}
             </span>
           </Button>
-          <Button variant="secondary" onClick={() => setMessages([welcome])}>Ny samtale</Button>
+          <Button variant="secondary" onClick={resetConversation}>Ny samtale</Button>
         </div>
       </header>
       <nav className="learning-links" aria-label="React-demonstrationer">
